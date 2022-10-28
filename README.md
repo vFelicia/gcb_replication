@@ -8,3 +8,7 @@
 - accuracy: indicates if a participant got a gcbID right (1) or wrong (0)
 - origStudy_taskCategorization: what were they asked to do?
 - graphType: what type of graph where they shown?
+
+# .RMD descriptions
+- gcb_tasks.RMD
+- replication_cleaning_tasks.RMD
