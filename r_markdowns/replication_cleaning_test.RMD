@@ -1,0 +1,96 @@
+---
+  output:
+  pdf_document: default
+html_document: default
+---
+  
+  title: "" author: "Vryan Feliciano" output: pdf_document: default html_document: default
+
+# Loading Packages, Dataset, and Global Variables
+```{r}
+# Load libraries:
+suppressPackageStartupMessages({library(tidyverse)
+                               library(rmarkdown)
+                               library(Hmisc)}) 
+
+# Load dataset:
+load("../test_data_derived.Rdata") 
+
+# Source in scripts for functions:
+source("mode.R")
+
+# Create global variables:
+gcb_item_total <- length(unique(test_data_derived$gcbID))#test_data_derived%>%distinct(gcbID)%>%count()
+```
+
+# 2: Load the dataset, and save if with affix _vf
+```{r}
+# using subset() to subset out variables that I have to replicate
+# and save that subsetted dataset as my own, test_data_derived_vf
+test_data_derived_vf <- test_data_derived %>%
+  subset(select=-c(percent_correct_total, percent_correct_total_sd, 
+                   vlat_percent, ggr_percent, accuracy_within_task, 
+                   accuracy_within_graph, match_within_task,
+                   match_between_task, match_within_graph,
+                   match_between_graph,items_answered))
+```
+
+# Task 3:
+## Calculate percent correct for each participant, store this as a new variable
+```{r}
+# group_by() participant's unique ID (gameID), and then for each participant calculate the percent correct, where: 
+# percent correct = sum what a participant got correct / the total number of GCB items, 66
+test_data_derived_vf <- test_data_derived_vf %>%
+  group_by(gameID) %>%
+  mutate(percent_correct_total_vf=sum(accuracy) / gcb_item_total) # fix later
+```
+
+# Task 3
+## Calculate the percent correct for just VLAT items and just GGR items for each participant, store this value as a new variable for each participant
+```{r}
+# The following code gets both,
+test_data_derived_vf <- test_data_derived_vf %>%
+  group_by(origStudy, subID) %>%
+  mutate(vlat_ggr_percent_vf = mean(accuracy))
+
+# I still want individual variables for vlat and ggr...
+```
+
+# Task 4
+## Calculate the percent correct for both origStudy_taskCategorization and graphType, store this as a value for each participant
+```{r}
+#
+test_data_derived_vf <- test_data_derived_vf %>%
+  group_by(origStudy_taskCategorization, subID) %>% 
+  mutate(accuracy_within_task_vf = mean(accuracy))
+
+test_data_derived_vf <- test_data_derived_vf %>%
+  group_by(graphType, subID) %>% 
+  mutate(accuracy_within_graph_vf = mean(accuracy))
+```
+
+# Task 5
+## Match within origStudy_taskCategorization & within graphType using Modal Percentage
+## Modal Percentage for within tasks:
+```{r}
+# Modal Percentage is calculated
+test_data_derived_vf <- test_data_derived_vf %>%
+  group_by(origStudy_taskCategorization) %>%
+  mutate(task_modalp_correct_vf = mode(accuracy_within_task_vf),
+         task_modalp_incorrect_vf = mode(1 - accuracy_within_task_vf),
+         task_modalp_vf = ifelse(task_modalp_correct > task_modalp_incorrect, task_modalp_correct,
+                              ifelse(task_modalp_incorrect > task_modalp_correct, task_modalp_incorrect, 
+                                     ifelse(task_modalp_correct == task_modalp_incorrect, task_modalp_correct, 0))))
+```
+
+## Modal Percentage for within graphType:
+```{r}
+# why aren't you working
+test_data_derived_vf <- test_data_derived_vf %>%
+  group_by(graphType) %>%
+  mutate(graph_modalp_correct_vf = mode(accuracy_within_graph_vf),
+         graph_modalp_incorrect_Vf = mode(1 - accuracy_within_graph_vf),
+         graph_modalp_vf = ifelse(graph_modalp_correct > graph_modalp_incorrect, graph_modalp_correct,
+                              ifelse(graph_modalp_incorrect > graph_modalp_correct, graph_modalp_incorrect, 
+                                     ifelse(graph_modalp_correct == graph_modalp_incorrect, graph_modalp_correct, 0))))
+```
