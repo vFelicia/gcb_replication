@@ -1,0 +1,89 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+title: "" author: "Vryan Feliciano" output: pdf_document: default html_document: default
+
+# Loading and Packages
+
+```{r}
+library(tidyverse)
+library(rmarkdown)
+library(Hmisc)
+
+load("../test_data_derived.Rdata") 
+# Rdata is a file type that saves information/output from a script/markdown in R. This specific one loads an Rdata file that holds one dataframe called "test_data_derived".
+```
+
+# HL's DataFrame Cleaning, to Prep for Tasks
+```{r}
+# this is fixing hannahs dataframe mistake 
+test_data_derived <- test_data_derived %>% 
+  ungroup(gameID)
+
+```
+
+# Data Background
+
+## Each row in this dataframe indicates participant's response on one item. In total, there are 66 items; not all participants might have answered the 66 items.
+
+## The variables:
+
+-   gameID: Each subject's unique identifying number
+-   The sum of unique gameID is the sample size
+-   version: Participants could have either take VLAT ---\> GGR (VLAT_GGR), or GGR ---\> VLAT (GGR_VLAT)
+  -   version was recoded into numerical representations: VLAT_GGR == 1, GGR_VLAT == 2
+
+# TASK 1: record the variable version to have numerical indicators instead of a string (use piping!!)
+```{r}
+# so we already have a dataframe, test_data_derived. we piped the "version" variable in the dataframe using the count() function to find how many unique cases of GGR_VLAT and VLAT_GGR. 
+test_data_derived <- test_data_derived %>%
+  mutate(version = recode(version, 'GGR_VLAT'=1, 'VLAT_GGR'=2))
+
+# okay so for some reason "count(version)" doesn't work
+# tally(version)
+
+# base R recode(), this doesnt work but also tidyverse foreverrrr
+# recoded_tdd <- recode(test_data_derived$version, "GGR_VLAT"=1, "VLAT_GGR"=2)
+head(test_data_derived$version)
+# NAs are possible, likely because... maybe respondents did not complete either?
+```
+
+# TASK 2: convert the variables vlat_time and ggr_time to minutes, creating new variables vlat_time_m & ggr_time_m (use piping!!)
+```{r}
+# so based on what me and HL talked about regarding using time to measure
+# a person's response time or focus & based on my own mathmeatical reasoning:
+# vlat_time and ggr_time are measured in MILLISECONDS, because typically that's how we measure rt
+# so to get them into minutes, we need to convert to seconds first, then minutes
+test_data_derived <- test_data_derived %>%
+  mutate(vlat_time_m = ((vlat_time/1000)/60), 
+         ggr_time_m = ((ggr_time/1000)/60))
+
+head(test_data_derived$vlat_time_m)
+head(test_data_derived$ggr_time_m)
+```
+
+# TASK 3: hardest one: create a new variable that is called rt_cv (coefficient of variation) which is calculated by: "for each subject: trial level reaction time standard deviation / trial level reaction time mean"
+## HL Example
+```{r}
+# HL Example -- probs not accurate to what you're gonna see? YES, BECAUSE IT'S ONLY ONE SUBJECT
+# the thing is, you're doing this for each subject
+hl_list <- c(0.33,0.34,0.35,0.5,0.9)
+hl_list
+
+hl_cv <- sd(hl_list) / mean(hl_list)
+hl_cv
+```
+## TASK SOLUTION:
+```{r}
+# for each subject... i would have to group by each unique gameID? so group_by() or unique()? filter()?
+# what is trial level reaction time? is it "rt" or "rt_min variable -- probably just use rt
+test_data_derived <- test_data_derived %>%
+  group_by(gameID) %>%
+  mutate(rt_cv = (sd(rt) / mean(rt)))
+
+head(test_data_derived$rt_cv)
+# yeah that looks right... but is it? :')
+```
