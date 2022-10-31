@@ -48,18 +48,17 @@ test_data_derived_vf <- test_data_derived_vf %>%
 # Task 3
 ## Calculate the percent correct for just VLAT items and just GGR items for each participant, store this value as a new variable for each participant
 ```{r}
-# The following code gets both,
+# The following code gets both VLAT and GGR percentage correct, for each participant
+# group_by() both what the original study was (VLAT or GGR) and the a participant's ID
+# mean(accuracy) will total up an individual participant's responses, and average them out
 test_data_derived_vf <- test_data_derived_vf %>%
   group_by(origStudy, subID) %>%
   mutate(vlat_ggr_percent_vf = mean(accuracy))
-
-# I still want individual variables for vlat and ggr...
 ```
 
 # Task 4
 ## Calculate the percent correct for both origStudy_taskCategorization and graphType, store this as a value for each participant
 ```{r}
-#
 test_data_derived_vf <- test_data_derived_vf %>%
   group_by(origStudy_taskCategorization, subID) %>% 
   mutate(accuracy_within_task_vf = mean(accuracy))
@@ -73,7 +72,6 @@ test_data_derived_vf <- test_data_derived_vf %>%
 ## Match within origStudy_taskCategorization & within graphType using Modal Percentage
 ## Modal Percentage for within tasks:
 ```{r}
-# Modal Percentage is calculated
 test_data_derived_vf <- test_data_derived_vf %>%
   group_by(origStudy_taskCategorization) %>%
   mutate(task_modalp_correct_vf = mode(accuracy_within_task_vf),
@@ -85,7 +83,6 @@ test_data_derived_vf <- test_data_derived_vf %>%
 
 ## Modal Percentage for within graphType:
 ```{r}
-# why aren't you working
 test_data_derived_vf <- test_data_derived_vf %>%
   group_by(graphType) %>%
   mutate(graph_modalp_correct_vf = mode(accuracy_within_graph_vf),
@@ -93,4 +90,9 @@ test_data_derived_vf <- test_data_derived_vf %>%
          graph_modalp_vf = ifelse(graph_modalp_correct > graph_modalp_incorrect, graph_modalp_correct,
                               ifelse(graph_modalp_incorrect > graph_modalp_correct, graph_modalp_incorrect, 
                                      ifelse(graph_modalp_correct == graph_modalp_incorrect, graph_modalp_correct, 0))))
+```
+
+# Export test_data_derived_vf as a .csv
+```{r}
+write.csv(test_data_derived_vf,"../test_data_derived_vf.csv", row.names = FALSE)
 ```
