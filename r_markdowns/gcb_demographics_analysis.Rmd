@@ -1,0 +1,106 @@
+---
+title: "gcb_demographics_analysis"
+author: "Vryan Feliciano"
+date: "2022-11-07"
+output: html_document
+pdf_document: default
+html_document: default
+---
+
+# Loading Packages, Dataset, and Global Variables
+```{r}
+# Load libraries:
+suppressPackageStartupMessages({library(tidyverse)
+                               library(rmarkdown)
+                               library(Hmisc)
+                               library(grid)
+                               library(gridExtra)}) 
+
+# Load dataset:
+load("test_data_derived_vf.Rdata") 
+load("survey_derived.Rdata")
+
+# Source in scripts for functions:
+## N/A
+
+# Create global variables:
+gcb_item_total <- length(unique(test_data_derived$gcbID))
+```
+
+# Does formal math education hone these skills of graph comprehension, insofar as these classes should help your understanding of certain skills?
+
+# Merge the two datasets, so that piping can be easier
+```{r}
+# Merging these two dataframes will making piping easier, because
+# I'll just be dealing with one merged dataframe and not two separate ones
+test_data_joined <- merge(test_data_derived_vf, survey_derived)
+
+```
+
+# Create composite score of math history
+```{r}
+test_data_joined <- test_data_joined %>%
+  group_by(gameID) %>% 
+  mutate(math_composite = algebra + statistics + calculus)
+```
+
+# Create overall bar chart of math history vs. task accuracy
+```{r}
+math_accuracy_graph <- ggplot(data=test_data_joined, 
+                              aes(x=math_composite, y=accuracy_within_task_vf)) +
+  stat_summary(fun="mean", geom="bar") +
+  stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25) +
+  coord_cartesian(ylim=c(0,1)) +
+  labs(title="How well are people doing on these tasks \n based on their math history?",
+       x="Math Composite Score", y="Accuracy \n (Percent Correct)")
+
+math_accuracy_graph
+```
+
+# Are there any difference between math background and how well people do?
+## Create sub-viz of statistics/no statistics
+```{r}
+stat_accuracy_graph <- ggplot(data=test_data_joined,
+                                   aes(x=as.factor(statistics), y=accuracy_within_task_vf)) +
+  stat_summary(fun="mean", geom="bar") +
+  stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25)  +
+  coord_cartesian(ylim=c(0,1)) +
+  scale_x_discrete(labels=c("no statistics", "has statistics")) +
+  labs(x="Statistics Background", y="Accuracy \n (Percent Correct)")
+
+stat_accuracy_graph
+```
+## Create sub-viz of calculus/no calculus
+```{r}
+calc_accuracy_graph <- ggplot(data=test_data_joined,
+                                   aes(x=as.factor(calculus), y=accuracy_within_task_vf)) +
+  stat_summary(fun="mean", geom="bar") +
+  stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25)  +
+  coord_cartesian(ylim=c(0,1)) +
+  scale_x_discrete(labels=c("no calculus", "has calculus")) +
+  labs(x="Calculus Background", y="Accuracy \n (Percent Correct)")
+
+calc_accuracy_graph
+```
+## Create sub-viz of calculus/no calculus
+```{r}
+alge_accuracy_graph <- ggplot(data=test_data_joined,
+                                   aes(x=as.factor(algebra), y=accuracy_within_task_vf)) +
+  stat_summary(fun="mean", geom="bar") +
+  stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25) + 
+  coord_cartesian(ylim=c(0,1)) +
+  scale_x_discrete(labels=c("no algebra", "has algebra")) +
+  labs(x="Algebra Background", y="Accuracy \n (Percent Correct)")
+
+alge_accuracy_graph
+```
+## Combined background graph using grid.arrange()
+```{r}
+combined_accuracy_graph <- grid.arrange(stat_accuracy_graph, calc_accuracy_graph, alge_accuracy_graph, 
+                                        nrow=1, top=textGrob("Are there any differences between math backgrounds and how well people do?")) +
+  theme_bw()
+
+combined_accuracy_graph
+
+```
+

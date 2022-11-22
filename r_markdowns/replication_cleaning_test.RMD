@@ -1,11 +1,11 @@
 ---
-  output:
-  pdf_document: default
+title: "replication_cleaning"
+author: "Vryan Feliciano"
+date: "2022-10-20"
+output: html_document
+pdf_document: default
 html_document: default
 ---
-  
-  title: "" author: "Vryan Feliciano" output: pdf_document: default html_document: default
-
 # Loading Packages, Dataset, and Global Variables
 ```{r}
 # Load libraries:
@@ -14,19 +14,19 @@ suppressPackageStartupMessages({library(tidyverse)
                                library(Hmisc)}) 
 
 # Load dataset:
-load("../test_data_derived.Rdata") 
+load("test_data_derived.Rdata") 
 
 # Source in scripts for functions:
 source("mode.R")
 
 # Create global variables:
-gcb_item_total <- length(unique(test_data_derived$gcbID))#test_data_derived%>%distinct(gcbID)%>%count()
+gcb_item_total <- length(unique(test_data_derived$gcbID))
 ```
 
 # 2: Load the dataset, and save if with affix _vf
 ```{r}
 # using subset() to subset out variables that I have to replicate
-# and save that subsetted dataset as my own, test_data_derived_vf
+# and save that subsetted dataset as my own, test_data_derived_vrf
 test_data_derived_vf <- test_data_derived %>%
   subset(select=-c(percent_correct_total, percent_correct_total_sd, 
                    vlat_percent, ggr_percent, accuracy_within_task, 
@@ -42,7 +42,7 @@ test_data_derived_vf <- test_data_derived %>%
 # percent correct = sum what a participant got correct / the total number of GCB items, 66
 test_data_derived_vf <- test_data_derived_vf %>%
   group_by(gameID) %>%
-  mutate(percent_correct_total_vf=sum(accuracy) / gcb_item_total) # fix later
+  mutate(percent_correct_total_vf=sum(accuracy) / gcb_item_total)
 ```
 
 # Task 3
@@ -73,26 +73,27 @@ test_data_derived_vf <- test_data_derived_vf %>%
 ## Modal Percentage for within tasks:
 ```{r}
 test_data_derived_vf <- test_data_derived_vf %>%
-  group_by(origStudy_taskCategorization) %>%
+  group_by(origStudy_taskCategorization, subID) %>%
   mutate(task_modalp_correct_vf = mode(accuracy_within_task_vf),
          task_modalp_incorrect_vf = mode(1 - accuracy_within_task_vf),
-         task_modalp_vf = ifelse(task_modalp_correct > task_modalp_incorrect, task_modalp_correct,
-                              ifelse(task_modalp_incorrect > task_modalp_correct, task_modalp_incorrect, 
-                                     ifelse(task_modalp_correct == task_modalp_incorrect, task_modalp_correct, 0))))
+         task_modalp_vf = ifelse(task_modalp_correct_vf > task_modalp_incorrect_vf, task_modalp_correct_vf,
+                              ifelse(task_modalp_incorrect_vf > task_modalp_correct_vf, task_modalp_incorrect_vf, 
+                                     ifelse(task_modalp_correct_vf == task_modalp_incorrect_vf, task_modalp_correct_vf))))
 ```
 
 ## Modal Percentage for within graphType:
 ```{r}
 test_data_derived_vf <- test_data_derived_vf %>%
-  group_by(graphType) %>%
+  group_by(graphType, subID) %>%
   mutate(graph_modalp_correct_vf = mode(accuracy_within_graph_vf),
-         graph_modalp_incorrect_Vf = mode(1 - accuracy_within_graph_vf),
-         graph_modalp_vf = ifelse(graph_modalp_correct > graph_modalp_incorrect, graph_modalp_correct,
-                              ifelse(graph_modalp_incorrect > graph_modalp_correct, graph_modalp_incorrect, 
-                                     ifelse(graph_modalp_correct == graph_modalp_incorrect, graph_modalp_correct, 0))))
+         graph_modalp_incorrect_vf = mode(1 - accuracy_within_graph_vf),
+         graph_modalp_vf = ifelse(graph_modalp_correct_vf > graph_modalp_incorrect_vf, graph_modalp_correct_vf,
+                              ifelse(graph_modalp_incorrect_vf > graph_modalp_correct_vf, graph_modalp_incorrect_vf, 
+                                     ifelse(graph_modalp_correct_vf == graph_modalp_incorrect_vf, graph_modalp_correct_vf))))
 ```
 
-# Export test_data_derived_vf as a .csv
+# Export test_data_derived_vf as a .Rdata file
 ```{r}
-write.csv(test_data_derived_vf,"../test_data_derived_vf.csv", row.names = FALSE)
+# write.csv(test_data_derived_vf,"../test_data_derived_vf.csv", row.names = FALSE)
+save(test_data_derived_vf, file='test_data_derived_vf.Rdata')
 ```
