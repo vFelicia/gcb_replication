@@ -1,0 +1,116 @@
+---
+title: "viz_creating"
+author: "Vryan Feliciano"
+date: "2022-11-06"
+output: html_document
+pdf_document: default
+html_document: default
+---
+
+# Loading Packages, Dataset, and Global Variables
+```{r}
+# Load libraries:
+suppressPackageStartupMessages({library(tidyverse)
+                               library(rmarkdown)
+                               library(Hmisc)}) 
+
+# Load dataset:
+load("test_data_derived_vf.Rdata") 
+
+# Source in scripts for functions:
+## N/A
+
+# Create global variables:
+## to replicate HL's viz, we order x-labels for task type in a similar order
+## this does not need to be done for graph type
+task_graph_order <- c('level_1', 'level_2', 'level_3',
+                      'retrieve_value', 'find_extremum', 'find_anomolies',
+                      'make_comparisons', 'determine_Range', 'characterize_distribution',
+                      'find_correlations_trends', 'find_clusters')
+
+```
+
+# Creating Bar Chart Viz: taskType vs. accuracy; "How well are people doing on these tests and which types of questions seem to be the most difficult?"
+```{r}
+task_accuracy_graph <- ggplot(data=test_data_derived_vf, aes(x=factor(origStudy_taskCategorization, task_graph_order), y=accuracy_within_task_vf,
+                                                       fill=test_data_derived_vf$origStudy)) +
+  stat_summary(fun="mean", geom="bar") +
+  stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25) +
+  scale_x_discrete(labels=c('read data \n level 1', 'read between data \n level 2', 'read beyond data \n level 3',
+                            'retrieve \n value', 'find \n extremum', 'find \n anomolies',
+                            'make \n comparisons', 'determine \n range', 'characterize \n distribution',
+                            'find \n trends/correlations', 'find \n clusters'), 
+                   guide=guide_axis(angle=70, n.dodge=1)) +
+  coord_cartesian(ylim=c(0,1)) +
+  labs(x="Question Type", y="Accuracy \n (Percent Correct)", fill="Original Study") +
+  theme_bw()
+
+task_accuracy_graph
+```
+
+# Creating Bar Chart Viz: taskType vs. matched scores (modal percentage)
+```{r}
+task_modalp_graph <- ggplot(data=test_data_derived_vf, aes(x=factor(origStudy_taskCategorization, task_graph_order), y=task_modalp_vf,
+                                                       fill=test_data_derived_vf$origStudy)) +
+  stat_summary(fun.y=mean, geom="bar", alpha=0.7) +
+  stat_summary(fun.data=mean_se, geom="errorbar", width=0.5) +
+  scale_x_discrete(labels=c('read data \n level 1', 'read between data \n level 2', 'read beyond data \n level 3',
+                            'retrieve \n value', 'find \n extremum', 'find \n anomolies',
+                            'make \n comparisons', 'determine \n range', 'characterize \n distribution',
+                            'find \n trends/correlations', 'find \n clusters'), 
+                   guide=guide_axis(angle=70, n.dodge=1)) +
+  coord_cartesian(ylim=c(0.5,1)) +
+  labs(x="Question Type", y="Inter-Item Reliability \n (Modal Percentage)", fill="Original Study") +
+  theme_bw()
+
+task_modalp_graph
+```
+# Creating Bar Chart Viz: INCORRECT taskType vs. matched scores (modal percentage)
+```{r}
+incorrect_task_modalp_graph <- ggplot(data=test_data_derived_vf, aes(x=factor(origStudy_taskCategorization, task_graph_order), y=incorrect_task_modalp_vf,
+                                                       fill=test_data_derived_vf$origStudy)) +
+  stat_summary(fun.y=mean, geom="bar", alpha=0.7) +
+  stat_summary(fun.data=mean_se, geom="errorbar", width=0.5) +
+  scale_x_discrete(labels=c('read data \n level 1', 'read between data \n level 2', 'read beyond data \n level 3',
+                            'retrieve \n value', 'find \n extremum', 'find \n anomolies',
+                            'make \n comparisons', 'determine \n range', 'characterize \n distribution',
+                            'find \n trends/correlations', 'find \n clusters'), 
+                   guide=guide_axis(angle=70, n.dodge=1)) +
+  coord_cartesian(ylim=c(0.5,1)) +
+  labs(x="Question Type", y="Inter-Item Reliability \n (Modal Percentage)", fill="Original Study") +
+  theme_bw()
+
+incorrect_task_modalp_graph
+```
+
+# Creating Bar Chart Viz: graphType vs. accuracy
+```{r}
+graph_accuracy_graph <- ggplot(data=test_data_derived_vf, aes(x=graphType, y=accuracy_within_graph_vf)) +
+  stat_summary(fun="mean", geom="bar") +
+  stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25) +
+  scale_x_discrete(labels=c('area chart', 'bar chart', 'bubble chart', 'choropleth map', 'histogram', 'icon array',
+                            'line chart', 'normalized stacked \n bar chart', 'pie chart', 'scatterplot',
+                            'stacked area chart', 'stacked bar chart', 'tree map'), 
+                   guide=guide_axis(angle=70, n.dodge=1)) +
+  coord_cartesian(ylim=c(0,1)) +
+  labs(x="Graph Type", y="Accuracy \n (Percent Correct)") +
+  theme_bw()
+
+graph_accuracy_graph
+```
+
+# Creating Bar Chart Viz: graphType vs. matched scores (modal percentage)
+```{r}
+graph_modalp_graph <- ggplot(data=test_data_derived_vf, aes(x=graphType, y=graph_modalp_vf)) +
+  stat_summary(fun="mean", geom="bar") +
+  stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25) +
+  scale_x_discrete(labels=c('area chart', 'bar chart', 'bubble chart', 'choropleth map', 'histogram', 'icon array',
+                            'line chart', 'normalized stacked \n bar chart', 'pie chart', 'scatterplot',
+                            'stacked area chart', 'stacked bar chart', 'tree map'), 
+                   guide=guide_axis(angle=70, n.dodge=1)) +
+  coord_cartesian(ylim=c(0.5,1)) +
+  labs(x="Graph Type", y="Inter-Item Reliability \n (Modal Percentage)") +
+  theme_bw()
+
+graph_modalp_graph
+```

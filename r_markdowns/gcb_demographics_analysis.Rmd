@@ -30,11 +30,12 @@ gcb_item_total <- length(unique(test_data_derived$gcbID))
 # Does formal math education hone these skills of graph comprehension, insofar as these classes should help your understanding of certain skills?
 
 # Merge the two datasets, so that piping can be easier
+# And save that joined dataset
 ```{r}
 # Merging these two dataframes will making piping easier, because
 # I'll just be dealing with one merged dataframe and not two separate ones
 test_data_joined <- merge(test_data_derived_vf, survey_derived)
-
+save(test_data_joined, file='test_data_joined.Rdata')
 ```
 
 # Create composite score of math history
@@ -46,15 +47,28 @@ test_data_joined <- test_data_joined %>%
 
 # Create overall bar chart of math history vs. task accuracy
 ```{r}
-math_accuracy_graph <- ggplot(data=test_data_joined, 
+mathback_accuracy_graph <- ggplot(data=test_data_joined, 
                               aes(x=math_composite, y=accuracy_within_task_vf)) +
   stat_summary(fun="mean", geom="bar") +
   stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25) +
   coord_cartesian(ylim=c(0,1)) +
-  labs(title="How well are people doing on these tasks \n based on their math history?",
-       x="Math Composite Score", y="Accuracy \n (Percent Correct)")
+  labs(x="Number of Math Classes Taken", y="Accuracy \n (Percent Correct)") +
+  theme_bw()
 
-math_accuracy_graph
+mathback_accuracy_graph
+```
+
+# how reliable?
+```{r}
+mathback_modalp_graph <- ggplot(data=test_data_joined, 
+                              aes(x=math_composite, y=task_modalp_vf)) +
+  stat_summary(fun="mean", geom="bar") +
+  stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25) +
+  coord_cartesian(ylim=c(0.5,1)) +
+  labs(x="Number of Math Classes Taken", y="Inter-Item Reliability \n (Modal Percentage)") +
+  theme_bw()
+
+mathback_modalp_graph
 ```
 
 # Are there any difference between math background and how well people do?
@@ -66,7 +80,8 @@ stat_accuracy_graph <- ggplot(data=test_data_joined,
   stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25)  +
   coord_cartesian(ylim=c(0,1)) +
   scale_x_discrete(labels=c("no statistics", "has statistics")) +
-  labs(x="Statistics Background", y="Accuracy \n (Percent Correct)")
+  labs(x="Statistics Background", y=element_blank()) +
+  theme_bw()
 
 stat_accuracy_graph
 ```
@@ -78,7 +93,8 @@ calc_accuracy_graph <- ggplot(data=test_data_joined,
   stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25)  +
   coord_cartesian(ylim=c(0,1)) +
   scale_x_discrete(labels=c("no calculus", "has calculus")) +
-  labs(x="Calculus Background", y="Accuracy \n (Percent Correct)")
+  labs(x="Calculus Background", y=element_blank()) +
+  theme_bw()
 
 calc_accuracy_graph
 ```
@@ -90,17 +106,39 @@ alge_accuracy_graph <- ggplot(data=test_data_joined,
   stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25) + 
   coord_cartesian(ylim=c(0,1)) +
   scale_x_discrete(labels=c("no algebra", "has algebra")) +
-  labs(x="Algebra Background", y="Accuracy \n (Percent Correct)")
+  labs(x="Algebra Background", y=element_blank()) +
+  theme_bw()
 
 alge_accuracy_graph
 ```
 ## Combined background graph using grid.arrange()
 ```{r}
-combined_accuracy_graph <- grid.arrange(stat_accuracy_graph, calc_accuracy_graph, alge_accuracy_graph, 
-                                        nrow=1, top=textGrob("Are there any differences between math backgrounds and how well people do?")) +
-  theme_bw()
+combinedback_accuracy_graph <- grid.arrange(stat_accuracy_graph, calc_accuracy_graph, alge_accuracy_graph, 
+                                        nrow=1, left=textGrob("Accuracy \n (Percent Correct)", rot=90, vjust=1))
 
-combined_accuracy_graph
+combinedback_accuracy_graph + theme_bw()
 
 ```
+
+```{r}
+test_data_joined_na <- test_data_joined %>%
+  filter(!is.na(participantEd.x))
+```
+
+```{r}
+educ_accuracy_graph <- ggplot(data=test_data_joined_na,
+                                   aes(x=participantEd.x, y=accuracy_within_task_vf)) +
+  stat_summary(fun="mean", geom="bar") +
+  stat_summary(fun.data="mean_cl_boot", geom="errorbar", size=0.2, width=0.25) + 
+  coord_cartesian(ylim=c(0,1)) +
+  scale_x_discrete(labels=c('N/A', 'Associates Degree', 'High School Graduate, \n Diploma, or Equivalent', 'Bachelor Degree',
+                            'Professional Degree'),
+                   guide=guide_axis(angle=70, n.dodge=1)) +
+  labs(title="Are there any differences between the highest degree earned \n and how well people do?",
+       x="Highest Level of Education", y="Accuracy \n (Percent Correct)") +
+  theme_bw()
+
+educ_accuracy_graph
+```
+
 

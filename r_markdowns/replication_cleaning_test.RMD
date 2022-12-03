@@ -73,7 +73,7 @@ test_data_derived_vf <- test_data_derived_vf %>%
 ## Modal Percentage for within tasks:
 ```{r}
 test_data_derived_vf <- test_data_derived_vf %>%
-  group_by(origStudy_taskCategorization, subID) %>%
+  group_by(origStudy_taskCategorization) %>%
   mutate(task_modalp_correct_vf = mode(accuracy_within_task_vf),
          task_modalp_incorrect_vf = mode(1 - accuracy_within_task_vf),
          task_modalp_vf = ifelse(task_modalp_correct_vf > task_modalp_incorrect_vf, task_modalp_correct_vf,
@@ -90,6 +90,17 @@ test_data_derived_vf <- test_data_derived_vf %>%
          graph_modalp_vf = ifelse(graph_modalp_correct_vf > graph_modalp_incorrect_vf, graph_modalp_correct_vf,
                               ifelse(graph_modalp_incorrect_vf > graph_modalp_correct_vf, graph_modalp_incorrect_vf, 
                                      ifelse(graph_modalp_correct_vf == graph_modalp_incorrect_vf, graph_modalp_correct_vf))))
+```
+
+## Modal Percentage for INCORRECT within tasks:
+```{r}
+test_data_derived_vf <- test_data_derived_vf %>%
+  group_by(origStudy_taskCategorization) %>%
+  mutate(task_modalp_correct_vf = mode(accuracy_within_task_vf),
+         task_modalp_incorrect_vf = mode(1 - accuracy_within_task_vf),
+         incorrect_task_modalp_vf = ifelse(task_modalp_correct_vf > task_modalp_incorrect_vf, task_modalp_correct_vf,
+                              ifelse(task_modalp_incorrect_vf > task_modalp_correct_vf, task_modalp_incorrect_vf, 
+                                     ifelse(task_modalp_correct_vf == task_modalp_incorrect_vf, task_modalp_correct_vf))))
 ```
 
 # Export test_data_derived_vf as a .Rdata file
